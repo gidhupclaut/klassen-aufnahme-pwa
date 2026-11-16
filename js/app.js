@@ -576,6 +576,24 @@
     await renderStudents();
 
     syncPendingRecordings({ silent: true });
+
+    // Erneuter Versuch, sobald die App wieder sichtbar wird (z.B. aus dem
+    // Hintergrund geholt) oder die Netzwerkverbindung zurückkommt - nicht nur
+    // beim allerersten Laden. So reicht es, die App kurz zu öffnen, sobald
+    // man wieder in Reichweite des PCs ist, ohne manuell etwas anzustoßen.
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "visible") {
+        syncPendingRecordings({ silent: true });
+      }
+    });
+    window.addEventListener("online", () => {
+      syncPendingRecordings({ silent: true });
+    });
+    setInterval(() => {
+      if (document.visibilityState === "visible") {
+        syncPendingRecordings({ silent: true });
+      }
+    }, 2 * 60 * 1000);
   }
 
   init();
