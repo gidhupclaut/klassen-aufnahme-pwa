@@ -26,7 +26,6 @@
 
   const btnPause = document.getElementById("btn-pause");
   const btnRecord = document.getElementById("btn-record");
-  const btnStop = document.getElementById("btn-stop");
 
   const recordingListEl = document.getElementById("recording-list");
   const recordingEmpty = document.getElementById("recording-empty");
@@ -309,8 +308,8 @@
     recorderHint.textContent = "Zum Starten tippen";
     levelBar.style.width = "0%";
     btnPause.classList.add("hidden");
-    btnStop.classList.add("hidden");
     btnRecord.classList.remove("is-recording");
+    btnRecord.setAttribute("aria-label", "Aufnahme starten");
     btnPause.innerHTML = PAUSE_ICON;
     btnPause.dataset.mode = "pause";
   }
@@ -327,45 +326,27 @@
   }
 
   btnRecord.addEventListener("click", async () => {
-    if (Recorder.getState() !== "idle") return;
-    try {
-      await Recorder.start((level) => {
-        levelBar.style.width = `${Math.round(level * 100)}%`;
-      });
-    } catch (err) {
-      console.error(err);
-      toast("Mikrofonzugriff nicht möglich. Bitte Berechtigung prüfen.");
-      return;
-    }
-    btnRecord.classList.add("is-recording");
-    btnPause.classList.remove("hidden");
-    btnStop.classList.remove("hidden");
-    stateLabel.textContent = "Aufnahme";
-    recorderHint.textContent = "Aufnahme läuft …";
-    startTimerLoop();
-  });
-
-  btnPause.addEventListener("click", () => {
     const state = Recorder.getState();
-    if (state === "recording") {
-      Recorder.pause();
-      btnPause.innerHTML = RESUME_ICON;
-      btnPause.dataset.mode = "resume";
-      stateLabel.textContent = "Pause";
-      recorderHint.textContent = "Aufnahme pausiert";
-      btnRecord.classList.remove("is-recording");
-    } else if (state === "paused") {
-      Recorder.resume();
-      btnPause.innerHTML = PAUSE_ICON;
-      btnPause.dataset.mode = "pause";
+    if (state === "idle") {
+      try {
+        await Recorder.start((level) => {
+          levelBar.style.width = `${Math.round(level * 100)}%`;
+        });
+      } catch (err) {
+        console.error(err);
+        toast("Mikrofonzugriff nicht möglich. Bitte Berechtigung prüfen.");
+        return;
+      }
+      btnRecord.classList.add("is-recording");
+      btnRecord.setAttribute("aria-label", "Stoppen und speichern");
+      btnPause.classList.remove("hidden");
       stateLabel.textContent = "Aufnahme";
       recorderHint.textContent = "Aufnahme läuft …";
-      btnRecord.classList.add("is-recording");
+      startTimerLoop();
+      return;
     }
-  });
 
-  btnStop.addEventListener("click", async () => {
-    if (Recorder.getState() === "idle") return;
+    // Läuft bereits (aufnehmend oder pausiert) -> stoppen und speichern.
     stopTimerLoop();
     const result = await Recorder.stop();
     resetRecorderUI();
@@ -386,6 +367,25 @@
     toast("Aufnahme gespeichert");
     await renderRecordings();
     syncPendingRecordings({ silent: true });
+  });
+
+  btnPause.addEventListener("click", () => {
+    const state = Recorder.getState();
+    if (state === "recording") {
+      Recorder.pause();
+      btnPause.innerHTML = RESUME_ICON;
+      btnPause.dataset.mode = "resume";
+      stateLabel.textContent = "Pause";
+      recorderHint.textContent = "Aufnahme pausiert";
+      btnRecord.classList.remove("is-recording");
+    } else if (state === "paused") {
+      Recorder.resume();
+      btnPause.innerHTML = PAUSE_ICON;
+      btnPause.dataset.mode = "pause";
+      stateLabel.textContent = "Aufnahme";
+      recorderHint.textContent = "Aufnahme läuft …";
+      btnRecord.classList.add("is-recording");
+    }
   });
 
   // ---------- Recordings list ----------

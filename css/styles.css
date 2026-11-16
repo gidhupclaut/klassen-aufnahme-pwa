@@ -79,14 +79,19 @@ input, select {
 }
 
 .topbar__title {
-  font-size: 1.15rem;
+  font-size: 1.05rem;
   font-weight: 700;
   margin: 0;
   flex: 1;
+  min-width: 0;
   text-align: center;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+#recording-student-name {
+  font-size: 1.5rem;
 }
 
 .topbar__actions {
@@ -115,7 +120,8 @@ input, select {
   padding: 10px 16px 16px;
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 8px;
+  column-gap: 8px;
+  row-gap: 14px;
 }
 
 .student-grid > li { min-width: 0; }
@@ -286,14 +292,14 @@ input, select {
 .ctrl-btn--record .ctrl-btn__dot {
   width: 30px;
   height: 30px;
-  border-radius: 8px;
+  border-radius: 50%;
   background: #fff;
   transition: all 0.15s ease;
 }
 .ctrl-btn--record.is-recording .ctrl-btn__dot {
-  border-radius: 4px;
-  width: 26px;
-  height: 26px;
+  border-radius: 6px;
+  width: 24px;
+  height: 24px;
 }
 .ctrl-btn--record.is-recording {
   animation: pulse 1.4s ease-in-out infinite;
