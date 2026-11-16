@@ -1,4 +1,4 @@
-const CACHE_NAME = "klassen-aufnahme-v2";
+const CACHE_NAME = "klassen-aufnahme-v3";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -8,6 +8,8 @@ const APP_SHELL = [
   "./js/db.js",
   "./js/recorder.js",
   "./js/share.js",
+  "./js/onedrive-config.js",
+  "./js/onedrive.js",
   "./icons/icon-192.png",
   "./icons/icon-512.png",
   "./icons/apple-touch-icon.png"
