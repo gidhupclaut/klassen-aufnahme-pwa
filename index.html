@@ -13,7 +13,7 @@
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
 <link rel="icon" href="icons/favicon-32.png" sizes="32x32" />
 <link rel="icon" href="icons/favicon-16.png" sizes="16x16" />
-<link rel="stylesheet" href="css/styles.css?v=6" />
+<link rel="stylesheet" href="css/styles.css?v=7" />
 </head>
 <body>
 
@@ -24,8 +24,8 @@
     <header class="topbar">
       <h1 class="topbar__title">Klasse</h1>
       <div class="topbar__actions">
-        <button id="btn-onedrive-account" class="icon-btn" aria-label="Microsoft-Konto" action-summary="Öffnet die OneDrive-Konto-Verwaltung">
-          <svg viewBox="0 0 24 24" width="21" height="21"><path d="M7 18a4 4 0 0 1-.6-7.96A5.5 5.5 0 0 1 17 9.07 4.5 4.5 0 0 1 16.5 18H7Z" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linejoin="round"/></svg>
+        <button id="btn-pc-sync" class="icon-btn" aria-label="PC-Synchronisierung" action-summary="Öffnet die Einstellungen für die PC-Synchronisierung">
+          <svg viewBox="0 0 24 24" width="21" height="21"><path d="M4 12a8 8 0 0 1 13.7-5.66M20 12a8 8 0 0 1-13.7 5.66" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round"/><path d="M17.5 3v4h-4M6.5 21v-4h4" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </button>
         <button id="btn-add-student" class="icon-btn" aria-label="Schüler hinzufügen" action-summary="Öffnet den Dialog zum Hinzufügen eines Schülers">
           <svg viewBox="0 0 24 24" width="24" height="24"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
@@ -113,18 +113,21 @@
   </div>
 </div>
 
-<!-- ===================== MODAL: ONEDRIVE-KONTO ===================== -->
-<div id="modal-onedrive" class="modal-overlay hidden">
+<!-- ===================== MODAL: PC-SYNCHRONISIERUNG ===================== -->
+<div id="modal-pc-sync" class="modal-overlay hidden">
   <div class="modal">
-    <h2 class="modal__title">Microsoft-Konto</h2>
-    <p class="modal__hint">Verbinde dein Microsoft-Konto, um Aufnahmen direkt in deinen OneDrive-Ordner "Klassen-Aufnahme" hochzuladen.</p>
-    <p id="onedrive-status" class="modal__hint"><strong>Nicht verbunden</strong></p>
-    <div class="modal__actions" style="justify-content: space-between;">
-      <button id="btn-onedrive-signout" class="btn btn--ghost hidden" action-summary="Trennt die Verbindung zum Microsoft-Konto">Trennen</button>
-      <button id="btn-onedrive-signin" class="btn btn--primary" action-summary="Startet die Anmeldung mit dem Microsoft-Konto">Mit Microsoft verbinden</button>
+    <h2 class="modal__title">PC-Synchronisierung</h2>
+    <p class="modal__hint">Trägt Aufnahmen automatisch an deinen PC im gleichen WLAN weiter, der sie in den OneDrive-Ordner legt.</p>
+    <input id="input-pc-url" class="text-input" type="text" placeholder="http://192.168.x.x:8420" autocomplete="off" autocapitalize="off" autocorrect="off" />
+    <input id="input-pc-token" class="text-input" type="text" placeholder="Zugangs-Code" autocomplete="off" autocapitalize="off" autocorrect="off" />
+    <p id="pc-sync-status" class="modal__hint"></p>
+    <div class="modal__actions">
+      <button id="btn-pc-sync-test" class="btn btn--ghost" action-summary="Prüft, ob der PC-Server erreichbar ist">Testen</button>
+      <button id="btn-pc-sync-save" class="btn btn--primary" action-summary="Speichert die PC-Server-Einstellungen">Speichern</button>
     </div>
     <div class="modal__actions">
-      <button id="btn-close-onedrive" class="btn btn--ghost" action-summary="Schließt den Dialog">Schließen</button>
+      <button id="btn-pc-sync-now" class="btn btn--ghost" action-summary="Synchronisiert jetzt alle noch nicht übertragenen Aufnahmen">Jetzt synchronisieren</button>
+      <button id="btn-close-pc-sync" class="btn btn--ghost" action-summary="Schließt den Dialog">Schließen</button>
     </div>
   </div>
 </div>
@@ -143,12 +146,10 @@
 
 <div id="toast" class="toast hidden"></div>
 
-<script src="https://cdn.jsdelivr.net/npm/@azure/msal-browser@5.27.0/lib/msal-browser.min.js"></script>
-<script src="js/db.js?v=6"></script>
-<script src="js/recorder.js?v=6"></script>
-<script src="js/share.js?v=6"></script>
-<script src="js/onedrive-config.js?v=6"></script>
-<script src="js/onedrive.js?v=6"></script>
-<script src="js/app.js?v=6"></script>
+<script src="js/db.js?v=7"></script>
+<script src="js/recorder.js?v=7"></script>
+<script src="js/share.js?v=7"></script>
+<script src="js/pcsync.js?v=7"></script>
+<script src="js/app.js?v=7"></script>
 </body>
 </html>

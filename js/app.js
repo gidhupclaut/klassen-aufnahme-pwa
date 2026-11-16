@@ -41,12 +41,15 @@
   const btnConfirmCancel = document.getElementById("btn-confirm-cancel");
   const btnConfirmOk = document.getElementById("btn-confirm-ok");
 
-  const btnOnedriveAccount = document.getElementById("btn-onedrive-account");
-  const modalOnedrive = document.getElementById("modal-onedrive");
-  const onedriveStatus = document.getElementById("onedrive-status");
-  const btnOnedriveSignin = document.getElementById("btn-onedrive-signin");
-  const btnOnedriveSignout = document.getElementById("btn-onedrive-signout");
-  const btnCloseOnedrive = document.getElementById("btn-close-onedrive");
+  const btnPcSync = document.getElementById("btn-pc-sync");
+  const modalPcSync = document.getElementById("modal-pc-sync");
+  const inputPcUrl = document.getElementById("input-pc-url");
+  const inputPcToken = document.getElementById("input-pc-token");
+  const pcSyncStatus = document.getElementById("pc-sync-status");
+  const btnPcSyncTest = document.getElementById("btn-pc-sync-test");
+  const btnPcSyncSave = document.getElementById("btn-pc-sync-save");
+  const btnPcSyncNow = document.getElementById("btn-pc-sync-now");
+  const btnClosePcSync = document.getElementById("btn-close-pc-sync");
 
   const toastEl = document.getElementById("toast");
 
@@ -335,14 +338,9 @@
         </button>
         <span class="recording-item__info">
           <span class="recording-item__title">${escapeHtml(formatDateTime(rec.createdAt))}</span>
-          <span class="recording-item__meta">${formatTimer(rec.durationMs)} min${rec.oneDriveUploadedAt ? " · In OneDrive" : ""}</span>
+          <span class="recording-item__meta">${formatTimer(rec.durationMs)} min${rec.pcSyncedAt ? " · Auf PC gesichert" : ""}</span>
         </span>
         <span class="recording-item__actions">
-          <button class="recording-item__btn" data-upload-id="${rec.id}" aria-label="Zu OneDrive hochladen" action-summary="Lädt diese Aufnahme in den OneDrive-Ordner der App hoch">
-            ${rec.oneDriveUploadedAt
-              ? '<svg viewBox="0 0 24 24" width="18" height="18"><path d="M20 7 9 18l-5-5" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>'
-              : '<svg viewBox="0 0 24 24" width="18" height="18"><path d="M7 18a4 4 0 0 1-.6-7.96A5.5 5.5 0 0 1 17 9.07 4.5 4.5 0 0 1 16.5 18h-2M12 11v7m0-7-2.5 2.5M12 11l2.5 2.5" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>'}
-          </button>
           <button class="recording-item__btn" data-share-id="${rec.id}" aria-label="Teilen" action-summary="Öffnet das Teilen-Menü für diese Aufnahme">
             <svg viewBox="0 0 24 24" width="18" height="18"><path d="M12 15V3m0 0 4 4m-4-4-4 4M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
           </button>
@@ -400,40 +398,6 @@
       playingId = id;
       setPlayIcon(icon, true);
       audio.play().catch(() => toast("Wiedergabe nicht möglich"));
-      return;
-    }
-
-    const uploadBtn = e.target.closest("[data-upload-id]");
-    if (uploadBtn) {
-      const id = Number(uploadBtn.dataset.uploadId);
-      const rec = currentRecordings.find((r) => r.id === id);
-      if (!rec) return;
-
-      if (!OneDrive.isSignedIn()) {
-        toast("Bitte zuerst mit Microsoft verbinden");
-        openOnedriveModal();
-        return;
-      }
-
-      uploadBtn.disabled = true;
-      toast("Lade zu OneDrive hoch …");
-      try {
-        await OneDrive.uploadRecording({
-          blob: rec.blob,
-          fileName: fileNameFor(rec.studentName, rec.createdAt, rec.mimeType),
-          studentName: rec.studentName,
-        });
-        await DB.markRecordingUploaded(id, Date.now());
-        toast("In OneDrive gespeichert");
-        await renderRecordings();
-      } catch (err) {
-        console.error(err);
-        if (err.message !== "redirecting-for-auth") {
-          toast("Upload fehlgeschlagen");
-        }
-      } finally {
-        uploadBtn.disabled = false;
-      }
       return;
     }
 
@@ -515,52 +479,84 @@
     if (action) await action();
   });
 
-  // ---------- OneDrive-Konto-Modal ----------
-  function refreshOnedriveStatus() {
-    const label = OneDrive.getAccountLabel();
-    if (label) {
-      onedriveStatus.innerHTML = `Verbunden als <strong>${escapeHtml(label)}</strong>`;
-      btnOnedriveSignin.classList.add("hidden");
-      btnOnedriveSignout.classList.remove("hidden");
-    } else {
-      onedriveStatus.innerHTML = "<strong>Nicht verbunden</strong>";
-      btnOnedriveSignin.classList.remove("hidden");
-      btnOnedriveSignout.classList.add("hidden");
-    }
+  // ---------- PC-Sync-Modal ----------
+  function openPcSyncModal() {
+    const { url, token } = PCSync.getSettings();
+    inputPcUrl.value = url;
+    inputPcToken.value = token;
+    pcSyncStatus.textContent = "";
+    openModal(modalPcSync);
   }
 
-  function openOnedriveModal() {
-    refreshOnedriveStatus();
-    openModal(modalOnedrive);
-  }
+  btnPcSync.addEventListener("click", openPcSyncModal);
+  btnClosePcSync.addEventListener("click", () => closeModal(modalPcSync));
 
-  btnOnedriveAccount.addEventListener("click", openOnedriveModal);
-  btnCloseOnedrive.addEventListener("click", () => closeModal(modalOnedrive));
-
-  btnOnedriveSignin.addEventListener("click", async () => {
-    try {
-      await OneDrive.signIn();
-    } catch (err) {
-      console.error(err);
-      toast("Anmeldung nicht möglich");
-    }
+  btnPcSyncSave.addEventListener("click", () => {
+    PCSync.saveSettings(inputPcUrl.value, inputPcToken.value);
+    pcSyncStatus.textContent = "Gespeichert.";
   });
 
-  btnOnedriveSignout.addEventListener("click", async () => {
-    try {
-      await OneDrive.signOut();
-    } catch (err) {
-      console.error(err);
-    }
-    refreshOnedriveStatus();
+  btnPcSyncTest.addEventListener("click", async () => {
+    PCSync.saveSettings(inputPcUrl.value, inputPcToken.value);
+    pcSyncStatus.textContent = "Teste Verbindung …";
+    const result = await PCSync.checkHealth();
+    pcSyncStatus.textContent = result.ok ? "PC erreichbar ✓" : `Nicht erreichbar: ${result.error || "unbekannter Fehler"}`;
   });
 
-  // Overlays: Klick außerhalb schließt (außer während Aufnahme nicht relevant hier)
-  [modalAddStudent, modalMic, modalConfirm, modalOnedrive].forEach((overlay) => {
+  btnPcSyncNow.addEventListener("click", async () => {
+    await syncPendingRecordings({ silent: false });
+  });
+
+  // Überlagerungen: Klick außerhalb schließt (außer während Aufnahme nicht relevant hier)
+  [modalAddStudent, modalMic, modalConfirm, modalPcSync].forEach((overlay) => {
     overlay.addEventListener("click", (e) => {
       if (e.target === overlay) closeModal(overlay);
     });
   });
+
+  // ---------- PC-Synchronisierung im Hintergrund ----------
+  async function syncPendingRecordings({ silent }) {
+    if (!PCSync.isConfigured()) {
+      if (!silent) toast("Bitte zuerst PC-Server einrichten");
+      return;
+    }
+
+    const health = await PCSync.checkHealth();
+    if (!health.ok) {
+      if (!silent) toast(`PC nicht erreichbar (${health.error || "unbekannt"})`);
+      return;
+    }
+
+    const pending = await DB.getUnsyncedRecordings();
+    if (pending.length === 0) {
+      if (!silent) toast("Schon alles synchronisiert");
+      return;
+    }
+
+    let successCount = 0;
+    for (const rec of pending) {
+      try {
+        const fileName = fileNameFor(rec.studentName, rec.createdAt, rec.mimeType);
+        await PCSync.uploadRecording({
+          blob: rec.blob,
+          mimeType: rec.mimeType,
+          studentName: rec.studentName,
+          fileName,
+        });
+        await DB.markRecordingSynced(rec.id, Date.now());
+        successCount++;
+      } catch (err) {
+        console.warn("PC-Sync fehlgeschlagen für Aufnahme", rec.id, err);
+      }
+    }
+
+    if (successCount > 0) {
+      toast(`${successCount} Aufnahme${successCount === 1 ? "" : "n"} an PC gesendet`);
+      if (currentStudent) await renderRecordings();
+    } else if (!silent) {
+      toast("Synchronisierung fehlgeschlagen");
+    }
+  }
 
   // ---------- Init ----------
   async function init() {
@@ -577,14 +573,9 @@
       });
     }
 
-    try {
-      await OneDrive.ensureInit();
-      if (OneDrive.isSignedIn()) toast(`Mit Microsoft verbunden: ${OneDrive.getAccountLabel()}`);
-    } catch (err) {
-      console.warn("OneDrive-Initialisierung fehlgeschlagen:", err);
-    }
-
     await renderStudents();
+
+    syncPendingRecordings({ silent: true });
   }
 
   init();

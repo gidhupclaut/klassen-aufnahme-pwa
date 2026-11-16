@@ -113,12 +113,12 @@ const DB = (() => {
     return wrap(index.count(studentId));
   }
 
-  async function markRecordingUploaded(id, timestamp) {
+  async function markRecordingSynced(id, timestamp) {
     const t = await tx(["recordings"], "readwrite");
     const store = t.objectStore("recordings");
     const record = await wrap(store.get(id));
     if (!record) return;
-    record.oneDriveUploadedAt = timestamp;
+    record.pcSyncedAt = timestamp;
     store.put(record);
     return new Promise((resolve, reject) => {
       t.oncomplete = () => resolve();
@@ -126,11 +126,18 @@ const DB = (() => {
     });
   }
 
+  async function getUnsyncedRecordings() {
+    const t = await tx(["recordings"], "readonly");
+    const all = await wrap(t.objectStore("recordings").getAll());
+    return all.filter((r) => !r.pcSyncedAt);
+  }
+
   return {
     addStudent,
     getStudents,
     deleteStudent,
-    markRecordingUploaded,
+    markRecordingSynced,
+    getUnsyncedRecordings,
     addRecording,
     getRecordingsByStudent,
     getRecording,
