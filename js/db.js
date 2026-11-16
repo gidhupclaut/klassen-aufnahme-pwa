@@ -113,31 +113,16 @@ const DB = (() => {
     return wrap(index.count(studentId));
   }
 
-  async function markRecordingSynced(id, timestamp) {
-    const t = await tx(["recordings"], "readwrite");
-    const store = t.objectStore("recordings");
-    const record = await wrap(store.get(id));
-    if (!record) return;
-    record.pcSyncedAt = timestamp;
-    store.put(record);
-    return new Promise((resolve, reject) => {
-      t.oncomplete = () => resolve();
-      t.onerror = () => reject(t.error);
-    });
-  }
-
-  async function getUnsyncedRecordings() {
+  async function getAllRecordings() {
     const t = await tx(["recordings"], "readonly");
-    const all = await wrap(t.objectStore("recordings").getAll());
-    return all.filter((r) => !r.pcSyncedAt);
+    return wrap(t.objectStore("recordings").getAll());
   }
 
   return {
     addStudent,
     getStudents,
     deleteStudent,
-    markRecordingSynced,
-    getUnsyncedRecordings,
+    getAllRecordings,
     addRecording,
     getRecordingsByStudent,
     getRecording,

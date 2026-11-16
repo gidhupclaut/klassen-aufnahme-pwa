@@ -338,7 +338,7 @@
         </button>
         <span class="recording-item__info">
           <span class="recording-item__title">${escapeHtml(formatDateTime(rec.createdAt))}</span>
-          <span class="recording-item__meta">${formatTimer(rec.durationMs)} min${rec.pcSyncedAt ? " · Auf PC gesichert" : ""}</span>
+          <span class="recording-item__meta">${formatTimer(rec.durationMs)} min</span>
         </span>
         <span class="recording-item__actions">
           <button class="recording-item__btn" data-share-id="${rec.id}" aria-label="Teilen" action-summary="Öffnet das Teilen-Menü für diese Aufnahme">
@@ -527,9 +527,9 @@
       return;
     }
 
-    const pending = await DB.getUnsyncedRecordings();
+    const pending = await DB.getAllRecordings();
     if (pending.length === 0) {
-      if (!silent) toast("Schon alles synchronisiert");
+      if (!silent) toast("Nichts zu synchronisieren");
       return;
     }
 
@@ -543,7 +543,9 @@
           studentName: rec.studentName,
           fileName,
         });
-        await DB.markRecordingSynced(rec.id, Date.now());
+        // Nach erfolgreichem Sync lokal löschen - liegt jetzt im OneDrive-Ordner.
+        if (playingId === rec.id) stopPlayback();
+        await DB.deleteRecording(rec.id);
         successCount++;
       } catch (err) {
         console.warn("PC-Sync fehlgeschlagen für Aufnahme", rec.id, err);
@@ -551,8 +553,9 @@
     }
 
     if (successCount > 0) {
-      toast(`${successCount} Aufnahme${successCount === 1 ? "" : "n"} an PC gesendet`);
+      toast(`${successCount} Aufnahme${successCount === 1 ? "" : "n"} an PC gesendet und lokal gelöscht`);
       if (currentStudent) await renderRecordings();
+      await renderStudents();
     } else if (!silent) {
       toast("Synchronisierung fehlgeschlagen");
     }
