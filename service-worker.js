@@ -1,4 +1,4 @@
-const CACHE_NAME = "klassen-aufnahme-v3";
+const CACHE_NAME = "klassen-aufnahme-v4";
 const APP_SHELL = [
   "./",
   "./index.html",
