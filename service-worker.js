@@ -1,15 +1,15 @@
-const CACHE_NAME = "klassen-aufnahme-v6";
+const CACHE_NAME = "klassen-aufnahme-v7";
 const APP_SHELL = [
   "./",
   "./index.html",
   "./manifest.json",
-  "./css/styles.css?v=5",
-  "./js/app.js?v=5",
-  "./js/db.js?v=5",
-  "./js/recorder.js?v=5",
-  "./js/share.js?v=5",
-  "./js/onedrive-config.js?v=5",
-  "./js/onedrive.js?v=5",
+  "./css/styles.css?v=6",
+  "./js/app.js?v=6",
+  "./js/db.js?v=6",
+  "./js/recorder.js?v=6",
+  "./js/share.js?v=6",
+  "./js/onedrive-config.js?v=6",
+  "./js/onedrive.js?v=6",
   "./icons/icon-192.png",
   "./icons/icon-512.png",
   "./icons/apple-touch-icon.png"

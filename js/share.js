@@ -15,7 +15,10 @@ const ShareUtil = (() => {
 
     if (navigator.canShare && navigator.canShare({ files: [file] })) {
       try {
-        await navigator.share({ files: [file], title: fileName });
+        // Nur "files" übergeben (kein "title"/"text") - manche Share-Extensions
+        // (z.B. OneDrive) filtern strenger, wenn neben der Datei weitere
+        // Share-Items wie Titel/Text vorhanden sind.
+        await navigator.share({ files: [file] });
         return "shared";
       } catch (e) {
         if (e && e.name === "AbortError") return "cancelled";
