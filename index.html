@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Klassen-Aufnahme</title>
+<meta name="theme-color" content="#1e293b" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="Aufnahme" />
+<link rel="manifest" href="manifest.json" />
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+<link rel="icon" href="icons/favicon-32.png" sizes="32x32" />
+<link rel="icon" href="icons/favicon-16.png" sizes="16x16" />
+<link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+
+<div id="app">
+
+  <!-- ===================== SCREEN: KLASSENÜBERSICHT ===================== -->
+  <section id="screen-students" class="screen screen--active">
+    <header class="topbar">
+      <h1 class="topbar__title">Klasse</h1>
+      <button id="btn-add-student" class="icon-btn" aria-label="Schüler hinzufügen" action-summary="Öffnet den Dialog zum Hinzufügen eines Schülers">
+        <svg viewBox="0 0 24 24" width="24" height="24"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+      </button>
+    </header>
+
+    <div id="student-empty" class="empty-state hidden">
+      <p>Noch keine Schüler angelegt.</p>
+      <button id="btn-add-student-empty" class="btn btn--primary">Ersten Schüler anlegen</button>
+    </div>
+
+    <ul id="student-list" class="student-list"></ul>
+  </section>
+
+  <!-- ===================== SCREEN: AUFNAHME ===================== -->
+  <section id="screen-recording" class="screen">
+    <header class="topbar">
+      <button id="btn-back" class="icon-btn" aria-label="Zurück" action-summary="Geht zurück zur Klassenübersicht">
+        <svg viewBox="0 0 24 24" width="24" height="24"><path d="M15 6l-6 6 6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+      </button>
+      <h1 class="topbar__title" id="recording-student-name">Schüler</h1>
+      <button id="btn-mic-settings" class="icon-btn" aria-label="Mikrofon wählen" action-summary="Öffnet die Mikrofon-Auswahl">
+        <svg viewBox="0 0 24 24" width="22" height="22"><path d="M12 15a3.5 3.5 0 0 0 3.5-3.5V6a3.5 3.5 0 0 0-7 0v5.5A3.5 3.5 0 0 0 12 15Z" stroke="currentColor" stroke-width="2" fill="none"/><path d="M6 11a6 6 0 0 0 12 0M12 19v2" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/></svg>
+      </button>
+    </header>
+
+    <div class="recorder">
+      <div class="recorder__status">
+        <span id="recorder-state-label" class="state-label">Bereit</span>
+        <span id="recorder-timer" class="timer">00:00</span>
+      </div>
+
+      <div class="level-meter" aria-hidden="true">
+        <div id="level-bar" class="level-meter__bar"></div>
+      </div>
+
+      <div class="recorder__controls">
+        <button id="btn-pause" class="ctrl-btn ctrl-btn--secondary hidden" aria-label="Pause" action-summary="Pausiert die laufende Aufnahme">
+          <svg viewBox="0 0 24 24" width="26" height="26"><rect x="6" y="5" width="4" height="14" rx="1" fill="currentColor"/><rect x="14" y="5" width="4" height="14" rx="1" fill="currentColor"/></svg>
+        </button>
+
+        <button id="btn-record" class="ctrl-btn ctrl-btn--record" aria-label="Aufnahme starten" action-summary="Startet die Audioaufnahme für diesen Schüler">
+          <span class="ctrl-btn__dot"></span>
+        </button>
+
+        <button id="btn-stop" class="ctrl-btn ctrl-btn--secondary hidden" aria-label="Stoppen und speichern" action-summary="Stoppt die Aufnahme und speichert sie lokal">
+          <svg viewBox="0 0 24 24" width="24" height="24"><rect x="6" y="6" width="12" height="12" rx="2" fill="currentColor"/></svg>
+        </button>
+      </div>
+
+      <p id="recorder-hint" class="recorder__hint">Zum Starten tippen</p>
+    </div>
+
+    <div class="recordings-section">
+      <h2 class="recordings-section__title">Aufnahmen</h2>
+      <ul id="recording-list" class="recording-list"></ul>
+      <p id="recording-empty" class="empty-hint hidden">Noch keine Aufnahmen für diesen Schüler.</p>
+    </div>
+  </section>
+
+</div>
+
+<!-- ===================== MODAL: SCHÜLER HINZUFÜGEN ===================== -->
+<div id="modal-add-student" class="modal-overlay hidden">
+  <div class="modal">
+    <h2 class="modal__title">Schüler hinzufügen</h2>
+    <input id="input-student-name" class="text-input" type="text" placeholder="Name des Schülers" autocomplete="off" />
+    <div class="modal__actions">
+      <button id="btn-cancel-add-student" class="btn btn--ghost" action-summary="Schließt den Dialog ohne zu speichern">Abbrechen</button>
+      <button id="btn-confirm-add-student" class="btn btn--primary" action-summary="Speichert den neuen Schüler lokal">Hinzufügen</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== MODAL: MIKROFON WÄHLEN ===================== -->
+<div id="modal-mic" class="modal-overlay hidden">
+  <div class="modal">
+    <h2 class="modal__title">Mikrofon wählen</h2>
+    <p class="modal__hint">Externe Mikrofone (z.&nbsp;B. DJI Mic) werden angezeigt, sobald sie verbunden sind.</p>
+    <select id="select-mic" class="text-input"></select>
+    <div class="modal__actions">
+      <button id="btn-close-mic" class="btn btn--primary" action-summary="Übernimmt die Mikrofon-Auswahl und schließt den Dialog">Fertig</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== MODAL: BESTÄTIGUNG LÖSCHEN ===================== -->
+<div id="modal-confirm" class="modal-overlay hidden">
+  <div class="modal">
+    <h2 class="modal__title" id="confirm-title">Wirklich löschen?</h2>
+    <p class="modal__hint" id="confirm-text"></p>
+    <div class="modal__actions">
+      <button id="btn-confirm-cancel" class="btn btn--ghost" action-summary="Bricht die Löschung ab">Abbrechen</button>
+      <button id="btn-confirm-ok" class="btn btn--danger" action-summary="Löscht den ausgewählten Eintrag endgültig">Löschen</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast" class="toast hidden"></div>
+
+<script src="js/db.js"></script>
+<script src="js/recorder.js"></script>
+<script src="js/share.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

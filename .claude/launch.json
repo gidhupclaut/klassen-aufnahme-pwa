@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "aufnahme-pwa",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "http.server", "8099", "--directory", "C:\\EMPYREUM_Aufnahme_PWA"],
+      "port": 8099
+    }
+  ]
+}
