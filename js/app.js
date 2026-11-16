@@ -137,6 +137,13 @@
     return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
   }
 
+  const AVATAR_COLORS = ["#0ea5e9", "#6366f1", "#14b8a6", "#f59e0b", "#e11d48", "#8b5cf6", "#0d9488", "#ca8a04"];
+  function avatarColor(name) {
+    let hash = 0;
+    for (let i = 0; i < name.length; i++) hash = (hash * 31 + name.charCodeAt(i)) >>> 0;
+    return AVATAR_COLORS[hash % AVATAR_COLORS.length];
+  }
+
   function confirmDialog(title, text, onConfirm) {
     confirmTitle.textContent = title;
     confirmText.textContent = text;
@@ -154,14 +161,18 @@
       const count = await DB.countRecordingsByStudent(student.id);
       const li = document.createElement("li");
       li.innerHTML = `
-        <button class="student-tile" data-id="${student.id}" action-summary="Öffnet die Aufnahmeansicht für ${escapeHtml(student.name)}">
-          <span class="student-tile__avatar">${escapeHtml(initials(student.name))}</span>
-          <span class="student-tile__name">${escapeHtml(student.name)}</span>
-          <span class="student-tile__meta">${count} Aufnahme${count === 1 ? "" : "n"}</span>
-        </button>
-        <button class="student-tile__menu" data-menu-id="${student.id}" aria-label="Optionen für ${escapeHtml(student.name)}" action-summary="Öffnet Umbenennen/Löschen für ${escapeHtml(student.name)}">
-          <svg viewBox="0 0 24 24" width="18" height="18"><circle cx="12" cy="5.5" r="1.6" fill="currentColor"/><circle cx="12" cy="12" r="1.6" fill="currentColor"/><circle cx="12" cy="18.5" r="1.6" fill="currentColor"/></svg>
-        </button>
+        <span class="student-row">
+          <button class="student-row__main" data-id="${student.id}" action-summary="Öffnet die Aufnahmeansicht für ${escapeHtml(student.name)}">
+            <span class="student-row__avatar" style="background:${avatarColor(student.name)}">${escapeHtml(initials(student.name))}</span>
+            <span class="student-row__text">
+              <span class="student-row__name">${escapeHtml(student.name)}</span>
+              <span class="student-row__meta">${count} Aufnahme${count === 1 ? "" : "n"}</span>
+            </span>
+          </button>
+          <button class="student-row__menu" data-menu-id="${student.id}" aria-label="Optionen für ${escapeHtml(student.name)}" action-summary="Öffnet Umbenennen/Löschen für ${escapeHtml(student.name)}">
+            <svg viewBox="0 0 24 24" width="17" height="17"><circle cx="12" cy="5.5" r="1.6" fill="currentColor"/><circle cx="12" cy="12" r="1.6" fill="currentColor"/><circle cx="12" cy="18.5" r="1.6" fill="currentColor"/></svg>
+          </button>
+        </span>
       `;
       studentList.appendChild(li);
     }
@@ -185,7 +196,7 @@
       }
       return;
     }
-    const tile = e.target.closest(".student-tile");
+    const tile = e.target.closest(".student-row__main");
     if (tile) {
       const id = Number(tile.dataset.id);
       const students = await DB.getStudents();
@@ -627,8 +638,24 @@
     }
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("service-worker.js").catch((err) => {
-        console.warn("Service Worker Registrierung fehlgeschlagen:", err);
+      // Selbst-Update: erzwingt eine echte Netzwerk-Prüfung auf eine neue
+      // Version und lädt die Seite einmalig automatisch neu, sobald eine
+      // neue Version übernommen hat - kein manuelles Cache-Löschen mehr nötig.
+      navigator.serviceWorker
+        .register("service-worker.js")
+        .then((reg) => {
+          reg.update().catch(() => {});
+          setInterval(() => reg.update().catch(() => {}), 60 * 1000);
+        })
+        .catch((err) => {
+          console.warn("Service Worker Registrierung fehlgeschlagen:", err);
+        });
+
+      let reloadedForUpdate = false;
+      navigator.serviceWorker.addEventListener("controllerchange", () => {
+        if (reloadedForUpdate) return;
+        reloadedForUpdate = true;
+        window.location.reload();
       });
     }
 

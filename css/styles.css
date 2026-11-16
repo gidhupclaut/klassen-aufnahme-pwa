@@ -112,69 +112,80 @@ input, select {
 .student-grid {
   list-style: none;
   margin: 0;
-  padding: 8px 16px 16px;
+  padding: 10px 16px 16px;
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 10px;
+  gap: 8px;
 }
 
-.student-grid > li { position: relative; }
+.student-grid > li { min-width: 0; }
 
-.student-tile {
+.student-row {
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  gap: 6px;
-  width: 100%;
-  padding: 18px 10px 12px;
+  align-items: stretch;
+  min-width: 0;
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: var(--radius);
+  border-radius: 14px;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  overflow: hidden;
 }
-.student-tile:active { background: var(--surface-2); }
 
-.student-tile__avatar {
-  width: 46px;
-  height: 46px;
+.student-row__main {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  flex: 1;
+  min-width: 0;
+  padding: 9px 4px 9px 9px;
+  text-align: left;
+}
+.student-row__main:active { background: var(--surface-2); }
+
+.student-row__avatar {
+  width: 34px;
+  height: 34px;
   border-radius: 50%;
-  background: var(--accent-dim);
   color: #fff;
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 700;
-  font-size: 1rem;
+  font-size: 0.74rem;
+  letter-spacing: 0.01em;
   flex-shrink: 0;
 }
 
-.student-tile__name {
+.student-row__text {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.student-row__name {
   font-weight: 600;
-  font-size: 0.92rem;
-  max-width: 100%;
+  font-size: 0.86rem;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.student-tile__meta {
-  font-size: 0.74rem;
+.student-row__meta {
+  font-size: 0.68rem;
   color: var(--text-dim);
 }
 
-.student-tile__menu {
-  position: absolute;
-  top: 6px;
-  right: 6px;
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
+.student-row__menu {
+  width: 32px;
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
   color: var(--text-dim);
+  border-left: 1px solid var(--border);
 }
-.student-tile__menu:active { background: var(--surface-2); }
+.student-row__menu:active { background: var(--surface-2); color: var(--text); }
 
 /* ---------- Modal list (Aktions-Menü) ---------- */
 .modal__list {
