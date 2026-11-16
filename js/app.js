@@ -319,6 +319,7 @@
     });
     toast("Aufnahme gespeichert");
     await renderRecordings();
+    syncPendingRecordings({ silent: true });
   });
 
   // ---------- Recordings list ----------
