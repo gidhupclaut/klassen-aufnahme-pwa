@@ -41,6 +41,17 @@
   const btnConfirmCancel = document.getElementById("btn-confirm-cancel");
   const btnConfirmOk = document.getElementById("btn-confirm-ok");
 
+  const modalStudentActions = document.getElementById("modal-student-actions");
+  const studentActionsTitle = document.getElementById("student-actions-title");
+  const btnActionRename = document.getElementById("btn-action-rename");
+  const btnActionDelete = document.getElementById("btn-action-delete");
+  const btnActionCancel = document.getElementById("btn-action-cancel");
+
+  const modalRenameStudent = document.getElementById("modal-rename-student");
+  const inputRenameStudent = document.getElementById("input-rename-student");
+  const btnCancelRenameStudent = document.getElementById("btn-cancel-rename-student");
+  const btnConfirmRenameStudent = document.getElementById("btn-confirm-rename-student");
+
   const btnPcSync = document.getElementById("btn-pc-sync");
   const modalPcSync = document.getElementById("modal-pc-sync");
   const inputPcUrl = document.getElementById("input-pc-url");
@@ -60,6 +71,7 @@
   let playingAudio = null;
   let playingId = null;
   let pendingConfirm = null;
+  let actionStudentId = null;
   const PAUSE_ICON =
     '<svg viewBox="0 0 24 24" width="26" height="26"><rect x="6" y="5" width="4" height="14" rx="1" fill="currentColor"/><rect x="14" y="5" width="4" height="14" rx="1" fill="currentColor"/></svg>';
   const RESUME_ICON =
@@ -142,20 +154,15 @@
       const count = await DB.countRecordingsByStudent(student.id);
       const li = document.createElement("li");
       li.innerHTML = `
-        <button class="student-card" data-id="${student.id}" action-summary="Öffnet die Aufnahmeansicht für ${escapeHtml(student.name)}">
-          <span class="student-card__avatar">${escapeHtml(initials(student.name))}</span>
-          <span class="student-card__body">
-            <span class="student-card__name">${escapeHtml(student.name)}</span>
-            <span class="student-card__meta">${count} Aufnahme${count === 1 ? "" : "n"}</span>
-          </span>
+        <button class="student-tile" data-id="${student.id}" action-summary="Öffnet die Aufnahmeansicht für ${escapeHtml(student.name)}">
+          <span class="student-tile__avatar">${escapeHtml(initials(student.name))}</span>
+          <span class="student-tile__name">${escapeHtml(student.name)}</span>
+          <span class="student-tile__meta">${count} Aufnahme${count === 1 ? "" : "n"}</span>
         </button>
-        <button class="student-card__delete" data-delete-id="${student.id}" aria-label="Schüler löschen" action-summary="Löscht ${escapeHtml(student.name)} inklusive aller Aufnahmen">
-          <svg viewBox="0 0 24 24" width="18" height="18"><path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m-9 0 1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round"/></svg>
+        <button class="student-tile__menu" data-menu-id="${student.id}" aria-label="Optionen für ${escapeHtml(student.name)}" action-summary="Öffnet Umbenennen/Löschen für ${escapeHtml(student.name)}">
+          <svg viewBox="0 0 24 24" width="18" height="18"><circle cx="12" cy="5.5" r="1.6" fill="currentColor"/><circle cx="12" cy="12" r="1.6" fill="currentColor"/><circle cx="12" cy="18.5" r="1.6" fill="currentColor"/></svg>
         </button>
       `;
-      li.style.display = "flex";
-      li.style.gap = "8px";
-      li.style.alignItems = "stretch";
       studentList.appendChild(li);
     }
   }
@@ -167,28 +174,76 @@
   }
 
   studentList.addEventListener("click", async (e) => {
-    const delBtn = e.target.closest("[data-delete-id]");
-    if (delBtn) {
-      const id = Number(delBtn.dataset.deleteId);
-      const card = delBtn.closest("li").querySelector(".student-card__name").textContent;
-      confirmDialog(
-        "Schüler löschen?",
-        `${card} und alle zugehörigen Aufnahmen werden dauerhaft gelöscht.`,
-        async () => {
-          await DB.deleteStudent(id);
-          await renderStudents();
-          toast("Schüler gelöscht");
-        }
-      );
+    const menuBtn = e.target.closest("[data-menu-id]");
+    if (menuBtn) {
+      actionStudentId = Number(menuBtn.dataset.menuId);
+      const students = await DB.getStudents();
+      const student = students.find((s) => s.id === actionStudentId);
+      if (student) {
+        studentActionsTitle.textContent = student.name;
+        openModal(modalStudentActions);
+      }
       return;
     }
-    const card = e.target.closest(".student-card");
-    if (card) {
-      const id = Number(card.dataset.id);
+    const tile = e.target.closest(".student-tile");
+    if (tile) {
+      const id = Number(tile.dataset.id);
       const students = await DB.getStudents();
       const student = students.find((s) => s.id === id);
       if (student) openRecordingScreen(student);
     }
+  });
+
+  // ---------- Schüler-Aktionen (Umbenennen/Löschen) ----------
+  btnActionCancel.addEventListener("click", () => closeModal(modalStudentActions));
+
+  btnActionDelete.addEventListener("click", async () => {
+    closeModal(modalStudentActions);
+    const id = actionStudentId;
+    const students = await DB.getStudents();
+    const student = students.find((s) => s.id === id);
+    if (!student) return;
+    confirmDialog(
+      "Schüler löschen?",
+      `${student.name} und alle zugehörigen Aufnahmen werden dauerhaft gelöscht.`,
+      async () => {
+        await DB.deleteStudent(id);
+        await renderStudents();
+        toast("Schüler gelöscht");
+      }
+    );
+  });
+
+  btnActionRename.addEventListener("click", async () => {
+    closeModal(modalStudentActions);
+    const students = await DB.getStudents();
+    const student = students.find((s) => s.id === actionStudentId);
+    if (!student) return;
+    inputRenameStudent.value = student.name;
+    openModal(modalRenameStudent);
+    setTimeout(() => inputRenameStudent.focus(), 50);
+  });
+
+  btnCancelRenameStudent.addEventListener("click", () => closeModal(modalRenameStudent));
+
+  async function confirmRenameStudent() {
+    const name = inputRenameStudent.value.trim();
+    if (!name) {
+      inputRenameStudent.focus();
+      return;
+    }
+    await DB.updateStudent(actionStudentId, name);
+    if (currentStudent && currentStudent.id === actionStudentId) {
+      currentStudent.name = name;
+      recordingStudentName.textContent = name;
+    }
+    closeModal(modalRenameStudent);
+    await renderStudents();
+  }
+
+  btnConfirmRenameStudent.addEventListener("click", confirmRenameStudent);
+  inputRenameStudent.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") confirmRenameStudent();
   });
 
   btnAddStudent.addEventListener("click", () => openAddStudentModal());
@@ -509,7 +564,7 @@
   });
 
   // Überlagerungen: Klick außerhalb schließt (außer während Aufnahme nicht relevant hier)
-  [modalAddStudent, modalMic, modalConfirm, modalPcSync].forEach((overlay) => {
+  [modalAddStudent, modalMic, modalConfirm, modalPcSync, modalStudentActions, modalRenameStudent].forEach((overlay) => {
     overlay.addEventListener("click", (e) => {
       if (e.target === overlay) closeModal(overlay);
     });

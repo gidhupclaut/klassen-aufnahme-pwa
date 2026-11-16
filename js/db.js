@@ -57,6 +57,30 @@ const DB = (() => {
     return all.sort((a, b) => a.name.localeCompare(b.name, "de"));
   }
 
+  async function updateStudent(id, name) {
+    const trimmed = name.trim();
+    const t = await tx(["students", "recordings"], "readwrite");
+    const studentStore = t.objectStore("students");
+    const student = await wrap(studentStore.get(id));
+    if (!student) return;
+    student.name = trimmed;
+    studentStore.put(student);
+
+    // Denormalisierten Namen auch bei vorhandenen Aufnahmen aktualisieren,
+    // damit Sync-Zielordner und Anzeige konsistent bleiben.
+    const recStore = t.objectStore("recordings");
+    const recordings = await wrap(recStore.index("byStudent").getAll(id));
+    for (const rec of recordings) {
+      rec.studentName = trimmed;
+      recStore.put(rec);
+    }
+
+    return new Promise((resolve, reject) => {
+      t.oncomplete = () => resolve();
+      t.onerror = () => reject(t.error);
+    });
+  }
+
   async function deleteStudent(studentId) {
     const t = await tx(["students", "recordings"], "readwrite");
     t.objectStore("students").delete(studentId);
@@ -121,6 +145,7 @@ const DB = (() => {
   return {
     addStudent,
     getStudents,
+    updateStudent,
     deleteStudent,
     getAllRecordings,
     addRecording,

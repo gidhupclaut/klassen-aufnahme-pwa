@@ -13,7 +13,7 @@
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
 <link rel="icon" href="icons/favicon-32.png" sizes="32x32" />
 <link rel="icon" href="icons/favicon-16.png" sizes="16x16" />
-<link rel="stylesheet" href="css/styles.css?v=10" />
+<link rel="stylesheet" href="css/styles.css?v=11" />
 </head>
 <body>
 
@@ -38,7 +38,7 @@
       <button id="btn-add-student-empty" class="btn btn--primary">Ersten Schüler anlegen</button>
     </div>
 
-    <ul id="student-list" class="student-list"></ul>
+    <ul id="student-list" class="student-grid"></ul>
   </section>
 
   <!-- ===================== SCREEN: AUFNAHME ===================== -->
@@ -132,6 +132,38 @@
   </div>
 </div>
 
+<!-- ===================== MODAL: SCHÜLER-AKTIONEN ===================== -->
+<div id="modal-student-actions" class="modal-overlay hidden">
+  <div class="modal">
+    <h2 class="modal__title" id="student-actions-title">Schüler</h2>
+    <div class="modal__list">
+      <button id="btn-action-rename" class="modal__list-item" action-summary="Öffnet den Dialog zum Umbenennen">
+        <svg viewBox="0 0 24 24" width="19" height="19"><path d="m16.5 3.5 4 4L8 20H4v-4L16.5 3.5Z" stroke="currentColor" stroke-width="1.7" fill="none" stroke-linejoin="round"/></svg>
+        Umbenennen
+      </button>
+      <button id="btn-action-delete" class="modal__list-item modal__list-item--danger" action-summary="Löscht diesen Schüler inklusive aller Aufnahmen">
+        <svg viewBox="0 0 24 24" width="19" height="19"><path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m-9 0 1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13" stroke="currentColor" stroke-width="1.7" fill="none" stroke-linecap="round"/></svg>
+        Löschen
+      </button>
+    </div>
+    <div class="modal__actions">
+      <button id="btn-action-cancel" class="btn btn--ghost" action-summary="Schließt den Dialog">Abbrechen</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== MODAL: SCHÜLER UMBENENNEN ===================== -->
+<div id="modal-rename-student" class="modal-overlay hidden">
+  <div class="modal">
+    <h2 class="modal__title">Schüler umbenennen</h2>
+    <input id="input-rename-student" class="text-input" type="text" placeholder="Name des Schülers" autocomplete="off" />
+    <div class="modal__actions">
+      <button id="btn-cancel-rename-student" class="btn btn--ghost" action-summary="Schließt den Dialog ohne zu speichern">Abbrechen</button>
+      <button id="btn-confirm-rename-student" class="btn btn--primary" action-summary="Speichert den neuen Namen">Speichern</button>
+    </div>
+  </div>
+</div>
+
 <!-- ===================== MODAL: BESTÄTIGUNG LÖSCHEN ===================== -->
 <div id="modal-confirm" class="modal-overlay hidden">
   <div class="modal">
@@ -146,10 +178,10 @@
 
 <div id="toast" class="toast hidden"></div>
 
-<script src="js/db.js?v=10"></script>
-<script src="js/recorder.js?v=10"></script>
-<script src="js/share.js?v=10"></script>
-<script src="js/pcsync.js?v=10"></script>
-<script src="js/app.js?v=10"></script>
+<script src="js/db.js?v=11"></script>
+<script src="js/recorder.js?v=11"></script>
+<script src="js/share.js?v=11"></script>
+<script src="js/pcsync.js?v=11"></script>
+<script src="js/app.js?v=11"></script>
 </body>
 </html>

@@ -108,32 +108,35 @@ input, select {
 }
 .icon-btn:active { background: var(--surface-2); }
 
-/* ---------- Student list ---------- */
-.student-list {
+/* ---------- Student grid ---------- */
+.student-grid {
   list-style: none;
   margin: 0;
   padding: 8px 16px 16px;
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
   gap: 10px;
 }
 
-.student-card {
+.student-grid > li { position: relative; }
+
+.student-tile {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 12px;
-  padding: 14px 16px;
+  text-align: center;
+  gap: 6px;
+  width: 100%;
+  padding: 18px 10px 12px;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  text-align: left;
-  width: 100%;
 }
-.student-card:active { background: var(--surface-2); }
+.student-tile:active { background: var(--surface-2); }
 
-.student-card__avatar {
-  width: 42px;
-  height: 42px;
+.student-tile__avatar {
+  width: 46px;
+  height: 46px;
   border-radius: 50%;
   background: var(--accent-dim);
   color: #fff;
@@ -145,31 +148,52 @@ input, select {
   flex-shrink: 0;
 }
 
-.student-card__body { flex: 1; min-width: 0; }
-.student-card__name {
+.student-tile__name {
   font-weight: 600;
-  font-size: 1rem;
+  font-size: 0.92rem;
+  max-width: 100%;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.student-card__meta {
-  font-size: 0.8rem;
+
+.student-tile__meta {
+  font-size: 0.74rem;
   color: var(--text-dim);
-  margin-top: 2px;
 }
 
-.student-card__delete {
-  width: 34px;
-  height: 34px;
+.student-tile__menu {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   color: var(--text-dim);
-  flex-shrink: 0;
 }
-.student-card__delete:active { background: var(--surface-2); color: var(--danger); }
+.student-tile__menu:active { background: var(--surface-2); }
+
+/* ---------- Modal list (Aktions-Menü) ---------- */
+.modal__list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.modal__list-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 10px;
+  border-radius: 10px;
+  text-align: left;
+  font-size: 0.95rem;
+  color: var(--text);
+}
+.modal__list-item:active { background: var(--surface-2); }
+.modal__list-item--danger { color: var(--danger); }
 
 .empty-state {
   text-align: center;
