@@ -1,22 +1,33 @@
-const CACHE_NAME = "klassen-aufnahme-v14";
+const CACHE_NAME = "klassen-aufnahme-v15";
 const APP_SHELL = [
   "./",
   "./index.html",
   "./manifest.json",
-  "./css/styles.css?v=13",
-  "./js/app.js?v=13",
-  "./js/db.js?v=13",
-  "./js/recorder.js?v=13",
-  "./js/share.js?v=13",
-  "./js/pcsync.js?v=13",
+  "./css/styles.css?v=14",
+  "./js/app.js?v=14",
+  "./js/db.js?v=14",
+  "./js/recorder.js?v=14",
+  "./js/share.js?v=14",
+  "./js/pcsync.js?v=14",
   "./icons/icon-192.png",
   "./icons/icon-512.png",
   "./icons/apple-touch-icon.png"
 ];
 
 self.addEventListener("install", (event) => {
+  // Jede Datei explizit mit cache:"reload" vom Netzwerk holen (nicht aus dem
+  // Browser-HTTP-Cache) - sonst kann z.B. ein alter index.html-Stand trotz
+  // neuer Service-Worker-Version weiter ausgeliefert werden.
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL))
+    (async () => {
+      const cache = await caches.open(CACHE_NAME);
+      await Promise.all(
+        APP_SHELL.map(async (url) => {
+          const response = await fetch(url, { cache: "reload" });
+          await cache.put(url, response);
+        })
+      );
+    })()
   );
   self.skipWaiting();
 });
