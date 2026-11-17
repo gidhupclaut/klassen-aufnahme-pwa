@@ -4,6 +4,7 @@
   // ---------- DOM refs ----------
   const screenStudents = document.getElementById("screen-students");
   const screenRecording = document.getElementById("screen-recording");
+  const screenScan = document.getElementById("screen-scan");
 
   const studentList = document.getElementById("student-list");
   const studentEmpty = document.getElementById("student-empty");
@@ -29,6 +30,16 @@
 
   const recordingListEl = document.getElementById("recording-list");
   const recordingEmpty = document.getElementById("recording-empty");
+
+  const documentListEl = document.getElementById("document-list");
+  const documentEmpty = document.getElementById("document-empty");
+  const btnScanStart = document.getElementById("btn-scan-start");
+  const btnScanCancel = document.getElementById("btn-scan-cancel");
+  const btnScanCapture = document.getElementById("btn-scan-capture");
+  const btnScanDone = document.getElementById("btn-scan-done");
+  const scanVideo = document.getElementById("scan-video");
+  const scanThumbsEl = document.getElementById("scan-thumbs");
+  const scanPageCountEl = document.getElementById("scan-page-count");
 
   const modalMic = document.getElementById("modal-mic");
   const selectMic = document.getElementById("select-mic");
@@ -66,6 +77,8 @@
   // ---------- State ----------
   let currentStudent = null;
   let currentRecordings = [];
+  let currentDocuments = [];
+  let scanPages = [];
   let timerInterval = null;
   let playingAudio = null;
   let playingId = null;
@@ -85,7 +98,7 @@
   }
 
   function showScreen(screen) {
-    [screenStudents, screenRecording].forEach((s) => s.classList.remove("screen--active"));
+    [screenStudents, screenRecording, screenScan].forEach((s) => s.classList.remove("screen--active"));
     screen.classList.add("screen--active");
   }
 
@@ -116,6 +129,7 @@
 
   function extensionFor(mimeType) {
     if (!mimeType) return "audio";
+    if (mimeType.includes("pdf")) return "pdf";
     if (mimeType.includes("mp4")) return "m4a";
     if (mimeType.includes("webm")) return "webm";
     if (mimeType.includes("aac")) return "aac";
@@ -157,7 +171,12 @@
     studentEmpty.classList.toggle("hidden", students.length > 0);
 
     for (const student of students) {
-      const count = await DB.countRecordingsByStudent(student.id);
+      const recCount = await DB.countRecordingsByStudent(student.id);
+      const docCount = await DB.countDocumentsByStudent(student.id);
+      const metaParts = [];
+      if (recCount > 0) metaParts.push(`${recCount} Aufnahme${recCount === 1 ? "" : "n"}`);
+      if (docCount > 0) metaParts.push(`${docCount} Dokument${docCount === 1 ? "" : "e"}`);
+      const meta = metaParts.length > 0 ? metaParts.join(" · ") : "Keine Einträge";
       const li = document.createElement("li");
       li.innerHTML = `
         <span class="student-row">
@@ -165,7 +184,7 @@
             <span class="student-row__avatar" style="background:${avatarColor(student.name)}">${escapeHtml(initials(student.name))}</span>
             <span class="student-row__text">
               <span class="student-row__name">${escapeHtml(student.name)}</span>
-              <span class="student-row__meta">${count} Aufnahme${count === 1 ? "" : "n"}</span>
+              <span class="student-row__meta">${meta}</span>
             </span>
           </button>
           <button class="student-row__menu" data-menu-id="${student.id}" aria-label="Optionen für ${escapeHtml(student.name)}" action-summary="Öffnet Umbenennen/Löschen für ${escapeHtml(student.name)}">
@@ -290,6 +309,7 @@
     resetRecorderUI();
     showScreen(screenRecording);
     await renderRecordings();
+    await renderDocuments();
   }
 
   btnBack.addEventListener("click", async () => {
@@ -366,7 +386,7 @@
     });
     toast("Aufnahme gespeichert");
     await renderRecordings();
-    syncPendingRecordings({ silent: true });
+    syncPending({ silent: true });
   });
 
   btnPause.addEventListener("click", () => {
@@ -499,6 +519,172 @@
     }
   });
 
+  // ---------- Dokumente (gescannte PDFs) ----------
+  async function renderDocuments() {
+    currentDocuments = await DB.getDocumentsByStudent(currentStudent.id);
+    documentListEl.innerHTML = "";
+    documentEmpty.classList.toggle("hidden", currentDocuments.length > 0);
+
+    for (const doc of currentDocuments) {
+      const li = document.createElement("li");
+      li.className = "recording-item";
+      li.dataset.id = doc.id;
+      li.innerHTML = `
+        <span class="recording-item__play" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="18" height="18"><path d="M7 3h7l3 3v15H7z" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linejoin="round"/><path d="M14 3v3h3" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linejoin="round"/></svg>
+        </span>
+        <span class="recording-item__info">
+          <span class="recording-item__title">${escapeHtml(formatDateTime(doc.createdAt))}</span>
+          <span class="recording-item__meta">${doc.pageCount} Seite${doc.pageCount === 1 ? "" : "n"}</span>
+        </span>
+        <span class="recording-item__actions">
+          <button class="recording-item__btn" data-share-doc-id="${doc.id}" aria-label="Teilen" action-summary="Öffnet das Teilen-Menü für dieses Dokument">
+            <svg viewBox="0 0 24 24" width="18" height="18"><path d="M12 15V3m0 0 4 4m-4-4-4 4M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          <button class="recording-item__btn" data-delete-doc-id="${doc.id}" aria-label="Löschen" action-summary="Löscht dieses Dokument">
+            <svg viewBox="0 0 24 24" width="18" height="18"><path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m-9 0 1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round"/></svg>
+          </button>
+        </span>
+      `;
+      documentListEl.appendChild(li);
+    }
+  }
+
+  documentListEl.addEventListener("click", async (e) => {
+    const shareBtn = e.target.closest("[data-share-doc-id]");
+    if (shareBtn) {
+      const id = Number(shareBtn.dataset.shareDocId);
+      const doc = currentDocuments.find((d) => d.id === id);
+      if (!doc) return;
+      try {
+        const result = await ShareUtil.shareRecording({
+          blob: doc.blob,
+          mimeType: "application/pdf",
+          fileName: fileNameFor(doc.studentName, doc.createdAt, "application/pdf"),
+        });
+        if (result === "downloaded") toast("Herunterladen gestartet");
+      } catch (err) {
+        console.error(err);
+        toast("Teilen nicht möglich");
+      }
+      return;
+    }
+
+    const delBtn = e.target.closest("[data-delete-doc-id]");
+    if (delBtn) {
+      const id = Number(delBtn.dataset.deleteDocId);
+      confirmDialog("Dokument löschen?", "Dieses Dokument wird dauerhaft gelöscht.", async () => {
+        await DB.deleteDocument(id);
+        await renderDocuments();
+        await renderStudents();
+      });
+    }
+  });
+
+  // ---------- Dokument scannen ----------
+  function revokeScanThumbUrls() {
+    scanThumbsEl.querySelectorAll("img").forEach((img) => {
+      if (img.src.startsWith("blob:")) URL.revokeObjectURL(img.src);
+    });
+  }
+
+  function renderScanThumbs() {
+    revokeScanThumbUrls();
+    scanThumbsEl.innerHTML = "";
+    scanPages.forEach((page, index) => {
+      const url = URL.createObjectURL(page.blob);
+      const div = document.createElement("div");
+      div.className = "scan__thumb";
+      div.innerHTML = `
+        <img src="${url}" alt="Seite ${index + 1}" />
+        <button class="scan__thumb__del" data-del-index="${index}" aria-label="Seite ${index + 1} löschen" action-summary="Entfernt diese gescannte Seite">✕</button>
+      `;
+      scanThumbsEl.appendChild(div);
+    });
+    scanPageCountEl.textContent = `${scanPages.length} Seite${scanPages.length === 1 ? "" : "n"}`;
+    btnScanDone.disabled = scanPages.length === 0;
+  }
+
+  async function openScanScreen() {
+    scanPages = [];
+    renderScanThumbs();
+    showScreen(screenScan);
+    try {
+      await Scanner.start(scanVideo);
+    } catch (err) {
+      console.error(err);
+      toast("Kamera nicht verfügbar. Bitte Berechtigung prüfen.");
+      showScreen(screenRecording);
+    }
+  }
+
+  function closeScanScreen() {
+    Scanner.stop();
+    revokeScanThumbUrls();
+    scanThumbsEl.innerHTML = "";
+    scanPages = [];
+    showScreen(screenRecording);
+  }
+
+  btnScanStart.addEventListener("click", openScanScreen);
+
+  btnScanCancel.addEventListener("click", () => {
+    if (scanPages.length === 0) {
+      closeScanScreen();
+      return;
+    }
+    confirmDialog("Scan abbrechen?", "Alle aufgenommenen Seiten werden verworfen.", () => {
+      closeScanScreen();
+    });
+  });
+
+  btnScanCapture.addEventListener("click", async () => {
+    const page = await Scanner.capture();
+    if (!page) {
+      toast("Aufnahme nicht möglich");
+      return;
+    }
+    scanPages.push(page);
+    renderScanThumbs();
+  });
+
+  scanThumbsEl.addEventListener("click", (e) => {
+    const delBtn = e.target.closest("[data-del-index]");
+    if (!delBtn) return;
+    const index = Number(delBtn.dataset.delIndex);
+    scanPages.splice(index, 1);
+    renderScanThumbs();
+  });
+
+  btnScanDone.addEventListener("click", async () => {
+    if (scanPages.length === 0) return;
+    btnScanDone.disabled = true;
+    toast("Dokument wird erstellt …");
+    try {
+      const pagesData = [];
+      for (const page of scanPages) {
+        const buf = await page.blob.arrayBuffer();
+        pagesData.push({ bytes: new Uint8Array(buf), width: page.width, height: page.height });
+      }
+      const pdfBlob = await PDF.buildPdfFromImages(pagesData);
+      await DB.addDocument({
+        studentId: currentStudent.id,
+        studentName: currentStudent.name,
+        blob: pdfBlob,
+        pageCount: pagesData.length,
+      });
+      closeScanScreen();
+      await renderDocuments();
+      await renderStudents();
+      toast("Dokument gespeichert");
+      syncPending({ silent: true });
+    } catch (err) {
+      console.error(err);
+      toast("Dokument konnte nicht erstellt werden");
+      btnScanDone.disabled = false;
+    }
+  });
+
   // ---------- Mic settings modal ----------
   btnMicSettings.addEventListener("click", async () => {
     selectMic.innerHTML = "<option>Lade Mikrofone …</option>";
@@ -571,7 +757,7 @@
   });
 
   btnPcSyncNow.addEventListener("click", async () => {
-    await syncPendingRecordings({ silent: false });
+    await syncPending({ silent: false });
   });
 
   // Überlagerungen: Klick außerhalb schließt (außer während Aufnahme nicht relevant hier)
@@ -582,7 +768,7 @@
   });
 
   // ---------- PC-Synchronisierung im Hintergrund ----------
-  async function syncPendingRecordings({ silent }) {
+  async function syncPending({ silent }) {
     if (!PCSync.isConfigured()) {
       if (!silent) toast("Bitte zuerst PC-Server einrichten");
       return;
@@ -594,14 +780,17 @@
       return;
     }
 
-    const pending = await DB.getAllRecordings();
-    if (pending.length === 0) {
+    const [pendingRecordings, pendingDocuments] = await Promise.all([
+      DB.getAllRecordings(),
+      DB.getAllDocuments(),
+    ]);
+    if (pendingRecordings.length === 0 && pendingDocuments.length === 0) {
       if (!silent) toast("Nichts zu synchronisieren");
       return;
     }
 
     let successCount = 0;
-    for (const rec of pending) {
+    for (const rec of pendingRecordings) {
       try {
         const fileName = fileNameFor(rec.studentName, rec.createdAt, rec.mimeType);
         await PCSync.uploadRecording({
@@ -619,9 +808,28 @@
       }
     }
 
+    for (const doc of pendingDocuments) {
+      try {
+        const fileName = fileNameFor(doc.studentName, doc.createdAt, "application/pdf");
+        await PCSync.uploadRecording({
+          blob: doc.blob,
+          mimeType: "application/pdf",
+          studentName: doc.studentName,
+          fileName,
+        });
+        await DB.deleteDocument(doc.id);
+        successCount++;
+      } catch (err) {
+        console.warn("PC-Sync fehlgeschlagen für Dokument", doc.id, err);
+      }
+    }
+
     if (successCount > 0) {
-      toast(`${successCount} Aufnahme${successCount === 1 ? "" : "n"} an PC gesendet und lokal gelöscht`);
-      if (currentStudent) await renderRecordings();
+      toast(`${successCount} Element${successCount === 1 ? "" : "e"} an PC gesendet und lokal gelöscht`);
+      if (currentStudent) {
+        await renderRecordings();
+        await renderDocuments();
+      }
       await renderStudents();
     } else if (!silent) {
       toast("Synchronisierung fehlgeschlagen");
@@ -661,7 +869,7 @@
 
     await renderStudents();
 
-    syncPendingRecordings({ silent: true });
+    syncPending({ silent: true });
 
     // Erneuter Versuch, sobald die App wieder sichtbar wird (z.B. aus dem
     // Hintergrund geholt) oder die Netzwerkverbindung zurückkommt - nicht nur
@@ -669,15 +877,15 @@
     // man wieder in Reichweite des PCs ist, ohne manuell etwas anzustoßen.
     document.addEventListener("visibilitychange", () => {
       if (document.visibilityState === "visible") {
-        syncPendingRecordings({ silent: true });
+        syncPending({ silent: true });
       }
     });
     window.addEventListener("online", () => {
-      syncPendingRecordings({ silent: true });
+      syncPending({ silent: true });
     });
     setInterval(() => {
       if (document.visibilityState === "visible") {
-        syncPendingRecordings({ silent: true });
+        syncPending({ silent: true });
       }
     }, 2 * 60 * 1000);
   }

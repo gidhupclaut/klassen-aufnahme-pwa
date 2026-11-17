@@ -327,6 +327,8 @@ input, select {
 /* ---------- Recordings list ---------- */
 .recordings-section {
   padding: 18px 16px 8px;
+}
+.recordings-section:last-of-type {
   flex: 1;
 }
 .recordings-section__title {
@@ -334,6 +336,22 @@ input, select {
   font-weight: 700;
   margin: 0 0 10px 4px;
   color: var(--text-dim);
+}
+.recordings-section__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+.recordings-section__head .recordings-section__title {
+  margin-bottom: 0;
+}
+.btn--small {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 12px;
+  font-size: 0.8rem;
 }
 
 .recording-list {
@@ -470,6 +488,86 @@ input, select {
 .btn--primary:active { background: var(--accent-dim); }
 .btn--ghost { background: var(--surface-2); color: var(--text); }
 .btn--danger { background: var(--danger); color: #2a0b0b; }
+
+/* ---------- Dokument scannen ---------- */
+.scan__page-count {
+  font-size: 0.78rem;
+  color: var(--text-dim);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.scan__camera {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+  background: #000;
+  overflow: hidden;
+}
+
+.scan__video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.scan__thumbs {
+  display: flex;
+  gap: 8px;
+  padding: 10px 16px;
+  overflow-x: auto;
+  background: var(--bg);
+  flex-shrink: 0;
+}
+
+.scan__thumb {
+  position: relative;
+  width: 48px;
+  height: 64px;
+  border-radius: 8px;
+  overflow: hidden;
+  flex-shrink: 0;
+  border: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.scan__thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.scan__thumb__del {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 17px;
+  height: 17px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  line-height: 1;
+}
+
+.scan__controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  padding: 16px 20px calc(16px + var(--safe-bottom));
+  background: var(--bg);
+  flex-shrink: 0;
+}
+
+.scan__controls .btn--primary:disabled {
+  opacity: 0.4;
+}
 
 /* ---------- Toast ---------- */
 .toast {

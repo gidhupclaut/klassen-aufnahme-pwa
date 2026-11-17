@@ -1,7 +1,7 @@
 // Lokale IndexedDB-Datenschicht: Schüler + Aufnahmen. Keine Daten verlassen das Gerät.
 const DB = (() => {
   const DB_NAME = "klassen-aufnahme-db";
-  const DB_VERSION = 1;
+  const DB_VERSION = 2;
   let dbPromise = null;
 
   function open() {
@@ -19,6 +19,12 @@ const DB = (() => {
 
         if (!db.objectStoreNames.contains("recordings")) {
           const store = db.createObjectStore("recordings", { keyPath: "id", autoIncrement: true });
+          store.createIndex("byStudent", "studentId");
+          store.createIndex("byCreatedAt", "createdAt");
+        }
+
+        if (!db.objectStoreNames.contains("documents")) {
+          const store = db.createObjectStore("documents", { keyPath: "id", autoIncrement: true });
           store.createIndex("byStudent", "studentId");
           store.createIndex("byCreatedAt", "createdAt");
         }
@@ -59,20 +65,27 @@ const DB = (() => {
 
   async function updateStudent(id, name) {
     const trimmed = name.trim();
-    const t = await tx(["students", "recordings"], "readwrite");
+    const t = await tx(["students", "recordings", "documents"], "readwrite");
     const studentStore = t.objectStore("students");
     const student = await wrap(studentStore.get(id));
     if (!student) return;
     student.name = trimmed;
     studentStore.put(student);
 
-    // Denormalisierten Namen auch bei vorhandenen Aufnahmen aktualisieren,
-    // damit Sync-Zielordner und Anzeige konsistent bleiben.
+    // Denormalisierten Namen auch bei vorhandenen Aufnahmen/Dokumenten
+    // aktualisieren, damit Sync-Zielordner und Anzeige konsistent bleiben.
     const recStore = t.objectStore("recordings");
     const recordings = await wrap(recStore.index("byStudent").getAll(id));
     for (const rec of recordings) {
       rec.studentName = trimmed;
       recStore.put(rec);
+    }
+
+    const docStore = t.objectStore("documents");
+    const documents = await wrap(docStore.index("byStudent").getAll(id));
+    for (const doc of documents) {
+      doc.studentName = trimmed;
+      docStore.put(doc);
     }
 
     return new Promise((resolve, reject) => {
@@ -82,12 +95,16 @@ const DB = (() => {
   }
 
   async function deleteStudent(studentId) {
-    const t = await tx(["students", "recordings"], "readwrite");
+    const t = await tx(["students", "recordings", "documents"], "readwrite");
     t.objectStore("students").delete(studentId);
     const recStore = t.objectStore("recordings");
-    const index = recStore.index("byStudent");
-    const toDelete = await wrap(index.getAllKeys(studentId));
-    toDelete.forEach((key) => recStore.delete(key));
+    const recIndex = recStore.index("byStudent");
+    const recToDelete = await wrap(recIndex.getAllKeys(studentId));
+    recToDelete.forEach((key) => recStore.delete(key));
+    const docStore = t.objectStore("documents");
+    const docIndex = docStore.index("byStudent");
+    const docToDelete = await wrap(docIndex.getAllKeys(studentId));
+    docToDelete.forEach((key) => docStore.delete(key));
     return new Promise((resolve, reject) => {
       t.oncomplete = () => resolve();
       t.onerror = () => reject(t.error);
@@ -142,6 +159,48 @@ const DB = (() => {
     return wrap(t.objectStore("recordings").getAll());
   }
 
+  async function addDocument({ studentId, studentName, blob, pageCount }) {
+    const t = await tx(["documents"], "readwrite");
+    const store = t.objectStore("documents");
+    const record = {
+      studentId,
+      studentName,
+      blob,
+      pageCount,
+      createdAt: Date.now(),
+    };
+    const id = await wrap(store.add(record));
+    return { ...record, id };
+  }
+
+  async function getDocumentsByStudent(studentId) {
+    const t = await tx(["documents"], "readonly");
+    const store = t.objectStore("documents");
+    const index = store.index("byStudent");
+    const all = await wrap(index.getAll(studentId));
+    return all.sort((a, b) => b.createdAt - a.createdAt);
+  }
+
+  async function deleteDocument(id) {
+    const t = await tx(["documents"], "readwrite");
+    t.objectStore("documents").delete(id);
+    return new Promise((resolve, reject) => {
+      t.oncomplete = () => resolve();
+      t.onerror = () => reject(t.error);
+    });
+  }
+
+  async function countDocumentsByStudent(studentId) {
+    const t = await tx(["documents"], "readonly");
+    const index = t.objectStore("documents").index("byStudent");
+    return wrap(index.count(studentId));
+  }
+
+  async function getAllDocuments() {
+    const t = await tx(["documents"], "readonly");
+    return wrap(t.objectStore("documents").getAll());
+  }
+
   return {
     addStudent,
     getStudents,
@@ -153,5 +212,10 @@ const DB = (() => {
     getRecording,
     deleteRecording,
     countRecordingsByStudent,
+    addDocument,
+    getDocumentsByStudent,
+    deleteDocument,
+    countDocumentsByStudent,
+    getAllDocuments,
   };
 })();
