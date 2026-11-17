@@ -13,7 +13,7 @@
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
 <link rel="icon" href="icons/favicon-32.png" sizes="32x32" />
 <link rel="icon" href="icons/favicon-16.png" sizes="16x16" />
-<link rel="stylesheet" href="css/styles.css?v=15" />
+<link rel="stylesheet" href="css/styles.css?v=16" />
 </head>
 <body>
 
@@ -107,17 +107,32 @@
       <span class="scan__page-count" id="scan-page-count">0 Seiten</span>
     </header>
 
-    <div class="scan__camera">
+    <div class="scan__camera" id="scan-camera-view">
       <video id="scan-video" class="scan__video" playsinline muted autoplay></video>
+      <div class="scan__guide" aria-hidden="true"></div>
+      <p class="scan__guide-hint">Dokument im Rahmen positionieren</p>
+    </div>
+
+    <div class="scan__review hidden" id="scan-review-view">
+      <div class="scan__review-stage" id="scan-review-stage">
+        <img id="scan-review-image" class="scan__review-image" alt="Aufgenommene Seite" />
+        <svg id="scan-review-overlay" class="scan__review-overlay"></svg>
+      </div>
+      <p class="scan__guide-hint">Ecken an die Blattränder ziehen, dann übernehmen</p>
     </div>
 
     <div class="scan__thumbs" id="scan-thumbs"></div>
 
-    <div class="scan__controls">
+    <div class="scan__controls" id="scan-controls-capture">
       <button id="btn-scan-capture" class="ctrl-btn ctrl-btn--record" aria-label="Seite aufnehmen" action-summary="Fotografiert die aktuelle Seite des Dokuments">
         <span class="ctrl-btn__dot"></span>
       </button>
       <button id="btn-scan-done" class="btn btn--primary" disabled action-summary="Schließt den Scan ab, erstellt ein PDF aus den Seiten und speichert es">Fertig</button>
+    </div>
+
+    <div class="scan__controls hidden" id="scan-controls-review">
+      <button id="btn-review-retake" class="btn btn--ghost" action-summary="Verwirft dieses Foto und kehrt zur Kamera zurück">Wiederholen</button>
+      <button id="btn-review-accept" class="btn btn--primary" action-summary="Schneidet die Seite anhand der Ecken zu und fügt sie dem Dokument hinzu">Seite übernehmen</button>
     </div>
   </section>
 
@@ -212,12 +227,14 @@
 
 <div id="toast" class="toast hidden"></div>
 
-<script src="js/db.js?v=15"></script>
-<script src="js/recorder.js?v=15"></script>
-<script src="js/share.js?v=15"></script>
-<script src="js/pcsync.js?v=15"></script>
-<script src="js/pdf.js?v=15"></script>
-<script src="js/scanner.js?v=15"></script>
-<script src="js/app.js?v=15"></script>
+<script src="js/db.js?v=16"></script>
+<script src="js/recorder.js?v=16"></script>
+<script src="js/share.js?v=16"></script>
+<script src="js/pcsync.js?v=16"></script>
+<script src="js/pdf.js?v=16"></script>
+<script src="js/scanner.js?v=16"></script>
+<script src="js/warp.js?v=16"></script>
+<script src="js/cropper.js?v=16"></script>
+<script src="js/app.js?v=16"></script>
 </body>
 </html>

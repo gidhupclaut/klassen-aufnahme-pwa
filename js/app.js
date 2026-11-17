@@ -40,6 +40,15 @@
   const scanVideo = document.getElementById("scan-video");
   const scanThumbsEl = document.getElementById("scan-thumbs");
   const scanPageCountEl = document.getElementById("scan-page-count");
+  const scanCameraView = document.getElementById("scan-camera-view");
+  const scanReviewView = document.getElementById("scan-review-view");
+  const scanControlsCapture = document.getElementById("scan-controls-capture");
+  const scanControlsReview = document.getElementById("scan-controls-review");
+  const scanReviewStage = document.getElementById("scan-review-stage");
+  const scanReviewImage = document.getElementById("scan-review-image");
+  const scanReviewOverlay = document.getElementById("scan-review-overlay");
+  const btnReviewRetake = document.getElementById("btn-review-retake");
+  const btnReviewAccept = document.getElementById("btn-review-accept");
 
   const modalMic = document.getElementById("modal-mic");
   const selectMic = document.getElementById("select-mic");
@@ -79,6 +88,8 @@
   let currentRecordings = [];
   let currentDocuments = [];
   let scanPages = [];
+  let pendingCapture = null;
+  let cropperInitialized = false;
   let timerInterval = null;
   let playingAudio = null;
   let playingId = null;
@@ -607,8 +618,14 @@
 
   async function openScanScreen() {
     scanPages = [];
+    pendingCapture = null;
     renderScanThumbs();
+    showCaptureMode();
     showScreen(screenScan);
+    if (!cropperInitialized) {
+      Cropper.init({ stage: scanReviewStage, img: scanReviewImage, svg: scanReviewOverlay });
+      cropperInitialized = true;
+    }
     try {
       await Scanner.start(scanVideo);
     } catch (err) {
@@ -623,13 +640,35 @@
     revokeScanThumbUrls();
     scanThumbsEl.innerHTML = "";
     scanPages = [];
+    discardPendingCapture();
     showScreen(screenRecording);
+  }
+
+  function showCaptureMode() {
+    scanCameraView.classList.remove("hidden");
+    scanReviewView.classList.add("hidden");
+    scanControlsCapture.classList.remove("hidden");
+    scanControlsReview.classList.add("hidden");
+  }
+
+  function showReviewMode() {
+    scanCameraView.classList.add("hidden");
+    scanReviewView.classList.remove("hidden");
+    scanControlsCapture.classList.add("hidden");
+    scanControlsReview.classList.remove("hidden");
+  }
+
+  function discardPendingCapture() {
+    if (pendingCapture && pendingCapture._url) {
+      URL.revokeObjectURL(pendingCapture._url);
+    }
+    pendingCapture = null;
   }
 
   btnScanStart.addEventListener("click", openScanScreen);
 
   btnScanCancel.addEventListener("click", () => {
-    if (scanPages.length === 0) {
+    if (scanPages.length === 0 && !pendingCapture) {
       closeScanScreen();
       return;
     }
@@ -639,13 +678,37 @@
   });
 
   btnScanCapture.addEventListener("click", async () => {
-    const page = await Scanner.capture();
-    if (!page) {
+    const capture = await Scanner.capture();
+    if (!capture) {
       toast("Aufnahme nicht möglich");
       return;
     }
-    scanPages.push(page);
-    renderScanThumbs();
+    discardPendingCapture();
+    capture._url = URL.createObjectURL(capture.blob);
+    pendingCapture = capture;
+    showReviewMode();
+    await Cropper.load(capture._url, capture.width, capture.height);
+  });
+
+  btnReviewRetake.addEventListener("click", () => {
+    discardPendingCapture();
+    showCaptureMode();
+  });
+
+  btnReviewAccept.addEventListener("click", () => {
+    if (!pendingCapture) return;
+    const quad = Cropper.getQuad();
+    const warpedCanvas = Warp.warpToCanvas(pendingCapture.canvas, quad);
+    warpedCanvas.toBlob(
+      (blob) => {
+        scanPages.push({ blob, width: warpedCanvas.width, height: warpedCanvas.height });
+        discardPendingCapture();
+        showCaptureMode();
+        renderScanThumbs();
+      },
+      "image/jpeg",
+      0.88
+    );
   });
 
   scanThumbsEl.addEventListener("click", (e) => {

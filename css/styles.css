@@ -512,6 +512,65 @@ input, select {
   display: block;
 }
 
+.scan__guide {
+  position: absolute;
+  inset: 8% 10%;
+  border: 2.5px dashed rgba(255, 255, 255, 0.75);
+  border-radius: 10px;
+  pointer-events: none;
+  box-shadow: 0 0 0 999px rgba(0, 0, 0, 0.32);
+}
+
+.scan__guide-hint {
+  position: absolute;
+  left: 50%;
+  bottom: 14px;
+  transform: translateX(-50%);
+  margin: 0;
+  padding: 6px 14px;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  font-size: 0.78rem;
+  border-radius: 999px;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.scan__review {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+  background: #000;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.scan__review-stage {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.scan__review-image {
+  display: block;
+  object-fit: contain;
+  touch-action: none;
+}
+
+.scan__review-overlay {
+  position: absolute;
+  touch-action: none;
+}
+
+.scan__review-overlay circle {
+  cursor: grab;
+  touch-action: none;
+}
+
 .scan__thumbs {
   display: flex;
   gap: 8px;
@@ -567,6 +626,14 @@ input, select {
 
 .scan__controls .btn--primary:disabled {
   opacity: 0.4;
+}
+
+#scan-controls-review {
+  gap: 12px;
+}
+#scan-controls-review .btn {
+  flex: 1;
+  text-align: center;
 }
 
 /* ---------- Toast ---------- */

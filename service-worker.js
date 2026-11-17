@@ -1,16 +1,18 @@
-const CACHE_NAME = "klassen-aufnahme-v17";
+const CACHE_NAME = "klassen-aufnahme-v18";
 const APP_SHELL = [
   "./",
   "./index.html",
   "./manifest.json",
-  "./css/styles.css?v=15",
-  "./js/app.js?v=15",
-  "./js/db.js?v=15",
-  "./js/recorder.js?v=15",
-  "./js/share.js?v=15",
-  "./js/pcsync.js?v=15",
-  "./js/pdf.js?v=15",
-  "./js/scanner.js?v=15",
+  "./css/styles.css?v=16",
+  "./js/app.js?v=16",
+  "./js/db.js?v=16",
+  "./js/recorder.js?v=16",
+  "./js/share.js?v=16",
+  "./js/pcsync.js?v=16",
+  "./js/pdf.js?v=16",
+  "./js/scanner.js?v=16",
+  "./js/warp.js?v=16",
+  "./js/cropper.js?v=16",
   "./icons/icon-192.png",
   "./icons/icon-512.png",
   "./icons/apple-touch-icon.png"

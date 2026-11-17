@@ -51,7 +51,10 @@ const Scanner = (() => {
             resolve(null);
             return;
           }
-          resolve({ blob, width: w, height: h });
+          // canvas wird mitgeliefert, damit der Zuschnitt (Cropper/Warp) das
+          // Originalfoto in voller Aufloesung verarbeiten kann, ohne es aus
+          // dem Blob erneut dekodieren zu muessen.
+          resolve({ blob, width: w, height: h, canvas });
         },
         "image/jpeg",
         0.85
