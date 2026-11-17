@@ -1,4 +1,4 @@
-const CACHE_NAME = "klassen-aufnahme-v15";
+const CACHE_NAME = "klassen-aufnahme-v16";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -15,15 +15,17 @@ const APP_SHELL = [
 ];
 
 self.addEventListener("install", (event) => {
-  // Jede Datei explizit mit cache:"reload" vom Netzwerk holen (nicht aus dem
-  // Browser-HTTP-Cache) - sonst kann z.B. ein alter index.html-Stand trotz
-  // neuer Service-Worker-Version weiter ausgeliefert werden.
+  // Jede Datei über eine mit CACHE_NAME durchmischte URL laden - das ist
+  // garantiert eine neue URL, die der Browser-HTTP-Cache nie zuvor gesehen
+  // hat, und landet trotzdem unter dem sauberen Original-Pfad im Cache,
+  // damit die Fetch-Anfragen zur Laufzeit (ohne Zusatz-Parameter) ihn finden.
   event.waitUntil(
     (async () => {
       const cache = await caches.open(CACHE_NAME);
       await Promise.all(
         APP_SHELL.map(async (url) => {
-          const response = await fetch(url, { cache: "reload" });
+          const bustUrl = url + (url.includes("?") ? "&" : "?") + "swv=" + CACHE_NAME;
+          const response = await fetch(bustUrl);
           await cache.put(url, response);
         })
       );
