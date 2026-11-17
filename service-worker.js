@@ -1,4 +1,4 @@
-const CACHE_NAME = "klassen-aufnahme-v18";
+const CACHE_NAME = "klassen-aufnahme-v19";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -23,16 +23,25 @@ self.addEventListener("install", (event) => {
   // garantiert eine neue URL, die der Browser-HTTP-Cache nie zuvor gesehen
   // hat, und landet trotzdem unter dem sauberen Original-Pfad im Cache,
   // damit die Fetch-Anfragen zur Laufzeit (ohne Zusatz-Parameter) ihn finden.
+  // Nacheinander statt parallel (Promise.all) + ein paar Wiederholversuche:
+  // robuster gegenüber einzelnen fehlschlagenden Requests (z.B. auf
+  // instabilem WLAN), als wenn ein einziger Fehlschlag das ganze
+  // Precaching abbricht.
   event.waitUntil(
     (async () => {
       const cache = await caches.open(CACHE_NAME);
-      await Promise.all(
-        APP_SHELL.map(async (url) => {
-          const bustUrl = url + (url.includes("?") ? "&" : "?") + "swv=" + CACHE_NAME;
-          const response = await fetch(bustUrl);
-          await cache.put(url, response);
-        })
-      );
+      for (const url of APP_SHELL) {
+        const bustUrl = url + (url.includes("?") ? "&" : "?") + "swv=" + CACHE_NAME;
+        for (let attempt = 0; attempt < 3; attempt++) {
+          try {
+            const response = await fetch(bustUrl);
+            await cache.put(url, response);
+            break;
+          } catch (err) {
+            if (attempt === 2) console.warn("Precache fehlgeschlagen fuer", url, err);
+          }
+        }
+      }
     })()
   );
   self.skipWaiting();
