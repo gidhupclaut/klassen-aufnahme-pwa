@@ -49,6 +49,7 @@
   const scanReviewOverlay = document.getElementById("scan-review-overlay");
   const btnReviewRetake = document.getElementById("btn-review-retake");
   const btnReviewAccept = document.getElementById("btn-review-accept");
+  const scanHintEl = document.getElementById("scan-hint");
 
   const modalMic = document.getElementById("modal-mic");
   const selectMic = document.getElementById("select-mic");
@@ -649,6 +650,7 @@
     scanReviewView.classList.add("hidden");
     scanControlsCapture.classList.remove("hidden");
     scanControlsReview.classList.add("hidden");
+    scanHintEl.textContent = "Dokument im Rahmen positionieren";
   }
 
   function showReviewMode() {
@@ -656,6 +658,7 @@
     scanReviewView.classList.remove("hidden");
     scanControlsCapture.classList.add("hidden");
     scanControlsReview.classList.remove("hidden");
+    scanHintEl.textContent = "Ecken an die Blattränder ziehen, dann übernehmen";
   }
 
   function discardPendingCapture() {
