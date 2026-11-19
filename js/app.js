@@ -53,9 +53,7 @@
   const scanTopbarEl = document.getElementById("scan-topbar");
   const scanBottomBarEl = document.getElementById("scan-bottom-bar");
   const scanTitleEl = document.getElementById("scan-title");
-  const modalScanCategory = document.getElementById("modal-scan-category");
-  const scanCategoryList = document.getElementById("scan-category-list");
-  const btnCancelScanCategory = document.getElementById("btn-cancel-scan-category");
+  const scanCategorySelectEl = document.getElementById("scan-category-select");
 
   const modalMic = document.getElementById("modal-mic");
   const selectMic = document.getElementById("select-mic");
@@ -326,9 +324,18 @@
     currentStudent = student;
     recordingStudentName.textContent = student.name;
     resetRecorderUI();
+    pendingScanCategory = null;
+    updateScanCategoryUI();
     showScreen(screenRecording);
     await renderRecordings();
     await renderDocuments();
+  }
+
+  function updateScanCategoryUI() {
+    scanCategorySelectEl.querySelectorAll(".scan-category-row").forEach((row) => {
+      row.classList.toggle("is-selected", row.dataset.category === pendingScanCategory);
+    });
+    btnScanStart.disabled = !pendingScanCategory;
   }
 
   btnBack.addEventListener("click", async () => {
@@ -649,7 +656,6 @@
     revokeScanThumbUrls();
     scanThumbsEl.innerHTML = "";
     scanPages = [];
-    pendingScanCategory = null;
     discardPendingCapture();
     showScreen(screenRecording);
   }
@@ -689,15 +695,15 @@
     scanReviewStage.style.bottom = `${bottomH}px`;
   }
 
-  btnScanStart.addEventListener("click", () => openModal(modalScanCategory));
+  scanCategorySelectEl.addEventListener("click", (e) => {
+    const row = e.target.closest("[data-category]");
+    if (!row) return;
+    pendingScanCategory = row.dataset.category;
+    updateScanCategoryUI();
+  });
 
-  btnCancelScanCategory.addEventListener("click", () => closeModal(modalScanCategory));
-
-  scanCategoryList.addEventListener("click", async (e) => {
-    const btn = e.target.closest("[data-category]");
-    if (!btn) return;
-    pendingScanCategory = btn.dataset.category;
-    closeModal(modalScanCategory);
+  btnScanStart.addEventListener("click", async () => {
+    if (!pendingScanCategory) return;
     await openScanScreen();
   });
 
@@ -860,7 +866,7 @@
   });
 
   // Überlagerungen: Klick außerhalb schließt (außer während Aufnahme nicht relevant hier)
-  [modalAddStudent, modalMic, modalConfirm, modalPcSync, modalStudentActions, modalRenameStudent, modalScanCategory].forEach((overlay) => {
+  [modalAddStudent, modalMic, modalConfirm, modalPcSync, modalStudentActions, modalRenameStudent].forEach((overlay) => {
     overlay.addEventListener("click", (e) => {
       if (e.target === overlay) closeModal(overlay);
     });
