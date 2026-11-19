@@ -50,6 +50,8 @@
   const btnReviewRetake = document.getElementById("btn-review-retake");
   const btnReviewAccept = document.getElementById("btn-review-accept");
   const scanHintEl = document.getElementById("scan-hint");
+  const scanTopbarEl = document.getElementById("scan-topbar");
+  const scanBottomBarEl = document.getElementById("scan-bottom-bar");
 
   const modalMic = document.getElementById("modal-mic");
   const selectMic = document.getElementById("select-mic");
@@ -668,6 +670,18 @@
     pendingCapture = null;
   }
 
+  // Die Zuschnitt-Fläche darf nie unter die (per Overlay darüberliegende)
+  // Kopf-/Fussleiste reichen, sonst sind die unteren Eckpunkte unsichtbar
+  // bzw. nicht greifbar (per Nutzer-Feedback genau dieses Problem). Höhe
+  // wird live gemessen statt fest geschätzt, da Hinweistext/Miniaturen die
+  // Fussleiste unterschiedlich hoch machen.
+  function sizeReviewStage() {
+    const topH = Math.ceil(scanTopbarEl.getBoundingClientRect().height);
+    const bottomH = Math.ceil(scanBottomBarEl.getBoundingClientRect().height);
+    scanReviewStage.style.top = `${topH}px`;
+    scanReviewStage.style.bottom = `${bottomH}px`;
+  }
+
   btnScanStart.addEventListener("click", openScanScreen);
 
   btnScanCancel.addEventListener("click", () => {
@@ -690,6 +704,7 @@
     capture._url = URL.createObjectURL(capture.blob);
     pendingCapture = capture;
     showReviewMode();
+    sizeReviewStage();
     await Cropper.load(capture._url, capture.width, capture.height);
   });
 
