@@ -52,6 +52,10 @@
   const scanHintEl = document.getElementById("scan-hint");
   const scanTopbarEl = document.getElementById("scan-topbar");
   const scanBottomBarEl = document.getElementById("scan-bottom-bar");
+  const scanTitleEl = document.getElementById("scan-title");
+  const modalScanCategory = document.getElementById("modal-scan-category");
+  const scanCategoryList = document.getElementById("scan-category-list");
+  const btnCancelScanCategory = document.getElementById("btn-cancel-scan-category");
 
   const modalMic = document.getElementById("modal-mic");
   const selectMic = document.getElementById("select-mic");
@@ -93,6 +97,7 @@
   let scanPages = [];
   let pendingCapture = null;
   let cropperInitialized = false;
+  let pendingScanCategory = null;
   let timerInterval = null;
   let playingAudio = null;
   let playingId = null;
@@ -549,7 +554,7 @@
         </span>
         <span class="recording-item__info">
           <span class="recording-item__title">${escapeHtml(formatDateTime(doc.createdAt))}</span>
-          <span class="recording-item__meta">${doc.pageCount} Seite${doc.pageCount === 1 ? "" : "n"}</span>
+          <span class="recording-item__meta">${escapeHtml(doc.category || "Divers")} · ${doc.pageCount} Seite${doc.pageCount === 1 ? "" : "n"}</span>
         </span>
         <span class="recording-item__actions">
           <button class="recording-item__btn" data-share-doc-id="${doc.id}" aria-label="Teilen" action-summary="Öffnet das Teilen-Menü für dieses Dokument">
@@ -622,6 +627,7 @@
   async function openScanScreen() {
     scanPages = [];
     pendingCapture = null;
+    scanTitleEl.textContent = pendingScanCategory ? `Dokument scannen – ${pendingScanCategory}` : "Dokument scannen";
     renderScanThumbs();
     showCaptureMode();
     showScreen(screenScan);
@@ -643,6 +649,7 @@
     revokeScanThumbUrls();
     scanThumbsEl.innerHTML = "";
     scanPages = [];
+    pendingScanCategory = null;
     discardPendingCapture();
     showScreen(screenRecording);
   }
@@ -682,7 +689,17 @@
     scanReviewStage.style.bottom = `${bottomH}px`;
   }
 
-  btnScanStart.addEventListener("click", openScanScreen);
+  btnScanStart.addEventListener("click", () => openModal(modalScanCategory));
+
+  btnCancelScanCategory.addEventListener("click", () => closeModal(modalScanCategory));
+
+  scanCategoryList.addEventListener("click", async (e) => {
+    const btn = e.target.closest("[data-category]");
+    if (!btn) return;
+    pendingScanCategory = btn.dataset.category;
+    closeModal(modalScanCategory);
+    await openScanScreen();
+  });
 
   btnScanCancel.addEventListener("click", () => {
     if (scanPages.length === 0 && !pendingCapture) {
@@ -753,6 +770,7 @@
         studentName: currentStudent.name,
         blob: pdfBlob,
         pageCount: pagesData.length,
+        category: pendingScanCategory,
       });
       closeScanScreen();
       await renderDocuments();
@@ -842,7 +860,7 @@
   });
 
   // Überlagerungen: Klick außerhalb schließt (außer während Aufnahme nicht relevant hier)
-  [modalAddStudent, modalMic, modalConfirm, modalPcSync, modalStudentActions, modalRenameStudent].forEach((overlay) => {
+  [modalAddStudent, modalMic, modalConfirm, modalPcSync, modalStudentActions, modalRenameStudent, modalScanCategory].forEach((overlay) => {
     overlay.addEventListener("click", (e) => {
       if (e.target === overlay) closeModal(overlay);
     });
@@ -897,6 +915,7 @@
           mimeType: "application/pdf",
           studentName: doc.studentName,
           fileName,
+          category: doc.category,
         });
         await DB.deleteDocument(doc.id);
         successCount++;

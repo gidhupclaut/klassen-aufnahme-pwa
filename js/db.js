@@ -159,7 +159,7 @@ const DB = (() => {
     return wrap(t.objectStore("recordings").getAll());
   }
 
-  async function addDocument({ studentId, studentName, blob, pageCount }) {
+  async function addDocument({ studentId, studentName, blob, pageCount, category }) {
     const t = await tx(["documents"], "readwrite");
     const store = t.objectStore("documents");
     const record = {
@@ -167,6 +167,7 @@ const DB = (() => {
       studentName,
       blob,
       pageCount,
+      category: category || "Divers",
       createdAt: Date.now(),
     };
     const id = await wrap(store.add(record));

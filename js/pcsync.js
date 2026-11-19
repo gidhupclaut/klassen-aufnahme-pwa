@@ -45,10 +45,11 @@ const PCSync = (() => {
     }
   }
 
-  async function uploadRecording({ blob, mimeType, studentName, fileName }) {
+  async function uploadRecording({ blob, mimeType, studentName, fileName, category }) {
     const { url, token } = getSettings();
     if (!url || !token) throw new Error("not-configured");
-    const endpoint = `${url}/upload?student=${encodeURIComponent(studentName)}&filename=${encodeURIComponent(fileName)}`;
+    let endpoint = `${url}/upload?student=${encodeURIComponent(studentName)}&filename=${encodeURIComponent(fileName)}`;
+    if (category) endpoint += `&category=${encodeURIComponent(category)}`;
     const res = await fetch(endpoint, {
       method: "POST",
       headers: {
